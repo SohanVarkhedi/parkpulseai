@@ -22,6 +22,12 @@ translations = {
     "partial": {"en": "Partial", "kn": "ಭಾಗಶಃ ವ್ಯಾಪ್ತಿ"},
     "uncovered": {"en": "Uncovered", "kn": "ವ್ಯಾಪ್ತಿಯಿಲ್ಲ"},
     "language_toggle": {"en": "Language", "kn": "ಭಾಷೆ"},
+    "legend_low": {"en": "Low impact", "kn": "ಕಡಿಮೆ ಪ್ರಭಾವ"},
+    "legend_high": {"en": "High impact", "kn": "ಹೆಚ್ಚು ಪ್ರಭಾವ"},
+    "about_data_title": {"en": "About this data", "kn": "ಈ ದತ್ತಾಂಶದ ಬಗ್ಗೆ"},
+    "col_impact_score": {"en": "Impact Score", "kn": "ಪ್ರಭಾವ ಅಂಕ"},
+    "col_violations": {"en": "Violations", "kn": "ಉಲ್ಲಂಘನೆಗಳು"},
+    "col_officers_rec": {"en": "Officers Rec.", "kn": "ಶಿಫಾರಸು ಅಧಿಕಾರಿಗಳು"},
 }
 
 

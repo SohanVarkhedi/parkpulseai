@@ -77,6 +77,11 @@ Status: todo / doing / done
 - [x] language selector in sidebar (English / ಕನ್ನಡ), persisted via session_state
 - [x] all keys in the provided starter set wired into app.py
 - [x] data values, place names, and dynamic tooltip text left in English
+- [x] 6 new keys added: legend_low/high, about_data_title, col_impact_score, col_violations, col_officers_rec
+- [x] LEGEND_HTML converted to _legend_html(lang) function; expander title uses t("about_data_title", lang)
+- [x] col_impact_score and col_violations routed through t() in both priority list and simulator tables
+- [x] Count Norm, Rush-Hr Frac, Viol/Hr kept as English string literals in both language modes (technical abbreviations without clean Kannada equivalents)
+- [x] methodology expander body stays English in both modes
 
 ---
 

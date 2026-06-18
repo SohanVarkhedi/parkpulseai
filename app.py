@@ -16,18 +16,6 @@ HOTSPOTS_PATH = "data/processed/hotspots.json"
 BANGALORE_CENTER = [12.9716, 77.5946]
 CENTRAL_CLUSTER_ID = 2
 
-LEGEND_HTML = """
-<div style="display:flex;align-items:center;gap:12px;padding:6px 0 2px 0;font-size:0.82em;color:#bbb;">
-  <span>Low impact</span>
-  <div style="width:160px;height:10px;border-radius:5px;
-              background:linear-gradient(to right,#e8c855,#e80000);flex-shrink:0;"></div>
-  <span>High impact</span>
-  <span style="margin-left:18px;color:#888;">
-    Marker color and size both scale with impact score (radius&nbsp;=&nbsp;5&nbsp;+&nbsp;22&nbsp;&times;&nbsp;score)
-  </span>
-</div>
-"""
-
 
 @st.cache_data
 def load_hotspots() -> pd.DataFrame:
@@ -48,6 +36,23 @@ def _score_color(score: float) -> str:
     g = int(200 * (1 - score))
     b = int(85 * (1 - score))
     return f"#{r:02x}{max(0,g):02x}{max(0,b):02x}"
+
+
+def _legend_html(lang: str) -> str:
+    low = t("legend_low", lang)
+    high = t("legend_high", lang)
+    return (
+        f"<div style='display:flex;align-items:center;gap:12px;padding:6px 0 2px 0;"
+        f"font-size:0.82em;color:#bbb;'>"
+        f"<span>{low}</span>"
+        f"<div style='width:160px;height:10px;border-radius:5px;"
+        f"background:linear-gradient(to right,#e8c855,#e80000);flex-shrink:0;'></div>"
+        f"<span>{high}</span>"
+        f"<span style='margin-left:18px;color:#888;'>"
+        f"Marker color and size both scale with impact score "
+        f"(radius&nbsp;=&nbsp;5&nbsp;+&nbsp;22&nbsp;&times;&nbsp;score)"
+        f"</span></div>"
+    )
 
 
 def _build_map(df: pd.DataFrame) -> folium.Map:
@@ -104,7 +109,7 @@ def page_map(df: pd.DataFrame, lang: str) -> None:
     st.markdown("&nbsp;", unsafe_allow_html=True)
     m = _build_map(df)
     st_folium(m, use_container_width=True, height=560, returned_objects=[])
-    st.markdown(LEGEND_HTML, unsafe_allow_html=True)
+    st.markdown(_legend_html(lang), unsafe_allow_html=True)
 
 
 def page_priority_list(df: pd.DataFrame, lang: str) -> None:
@@ -114,7 +119,9 @@ def page_priority_list(df: pd.DataFrame, lang: str) -> None:
         "Rush-hour signal is morning-dominant (IST 7-12); evening data is sparse in this dataset."
     )
 
-    rec_col = t("recommended_officers", lang)
+    impact_col = t("col_impact_score", lang)
+    viol_col = t("col_violations", lang)
+    rec_col = t("col_officers_rec", lang)
 
     display = df[
         [
@@ -132,11 +139,11 @@ def page_priority_list(df: pd.DataFrame, lang: str) -> None:
     display = display.rename(
         columns={
             "hotspot_id": "Hotspot ID",
-            "impact_score": "Impact Score",
-            "violation_count": "Violations",
-            "count_norm": "Count Norm",
-            "rush_frac": "Rush-Hr Frac",
-            "violations_per_hour": "Viol/Hr",
+            "impact_score": impact_col,
+            "violation_count": viol_col,
+            "count_norm": "Count Norm",       # technical abbreviation -- stays English
+            "rush_frac": "Rush-Hr Frac",      # technical abbreviation -- stays English
+            "violations_per_hour": "Viol/Hr", # technical abbreviation -- stays English
             "recommended_officers": rec_col,
         }
     )
@@ -145,15 +152,15 @@ def page_priority_list(df: pd.DataFrame, lang: str) -> None:
         display.style
         .format(
             {
-                "Impact Score": "{:.4f}",
-                "Violations": "{:,.0f}",
+                impact_col: "{:.4f}",
+                viol_col: "{:,.0f}",
                 "Count Norm": "{:.3f}",
                 "Rush-Hr Frac": "{:.3f}",
                 "Viol/Hr": "{:.2f}",
                 rec_col: "{:.0f}",
             }
         )
-        .background_gradient(subset=["Impact Score"], cmap="YlOrRd")
+        .background_gradient(subset=[impact_col], cmap="YlOrRd")
     )
 
     st.dataframe(styled, use_container_width=True, height=600)
@@ -166,14 +173,16 @@ def page_priority_list(df: pd.DataFrame, lang: str) -> None:
     )
 
 
-def _display_sim(raw: pd.DataFrame) -> pd.DataFrame:
+def _display_sim(raw: pd.DataFrame, lang: str) -> pd.DataFrame:
+    impact_col = t("col_impact_score", lang)
+    viol_col = t("col_violations", lang)
     return (
         raw.rename(
             columns={
                 "rank": "Rank",
                 "hotspot_id": "Hotspot ID",
-                "impact_score": "Impact Score",
-                "violation_count": "Violations",
+                "impact_score": impact_col,
+                "violation_count": viol_col,
                 "officers_needed": "Officers Needed",
                 "officers_assigned": "Officers Assigned",
                 "tow_truck": "Tow Truck",
@@ -185,12 +194,14 @@ def _display_sim(raw: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def _fmt_sim(df: pd.DataFrame) -> object:
+def _fmt_sim(df: pd.DataFrame, lang: str) -> object:
+    impact_col = t("col_impact_score", lang)
+    viol_col = t("col_violations", lang)
     fmt = {}
-    if "Violations" in df.columns:
-        fmt["Violations"] = "{:,.0f}"
-    if "Impact Score" in df.columns:
-        fmt["Impact Score"] = "{:.3f}"
+    if viol_col in df.columns:
+        fmt[viol_col] = "{:,.0f}"
+    if impact_col in df.columns:
+        fmt[impact_col] = "{:.3f}"
     return df.style.format(fmt)
 
 
@@ -239,22 +250,24 @@ def page_simulator(df: pd.DataFrame, lang: str) -> None:
 
         if not covered.empty:
             st.subheader("Covered hotspots")
-            st.dataframe(_fmt_sim(_display_sim(covered)), use_container_width=True)
+            st.dataframe(_fmt_sim(_display_sim(covered, lang), lang), use_container_width=True)
 
         if not partial.empty:
             st.subheader("Partially covered (officers ran out mid-allocation)")
-            st.dataframe(_fmt_sim(_display_sim(partial)), use_container_width=True)
+            st.dataframe(_fmt_sim(_display_sim(partial, lang), lang), use_container_width=True)
 
         if not uncovered.empty:
             st.subheader("Uncovered hotspots")
-            uncov_display = _display_sim(uncovered)[
-                ["Hotspot ID", "Impact Score", "Violations", "Officers Needed"]
+            impact_col = t("col_impact_score", lang)
+            viol_col = t("col_violations", lang)
+            uncov_display = _display_sim(uncovered, lang)[
+                ["Hotspot ID", impact_col, viol_col, "Officers Needed"]
             ]
-            st.dataframe(_fmt_sim(uncov_display), use_container_width=True)
+            st.dataframe(_fmt_sim(uncov_display, lang), use_container_width=True)
 
 
-def _sidebar_methodology() -> None:
-    with st.sidebar.expander("About this data"):
+def _sidebar_methodology(lang: str) -> None:
+    with st.sidebar.expander(t("about_data_title", lang)):
         st.markdown(
             """
 **Dataset:** 298,450 raw parking violation records from Bangalore (Nov 2023 - Apr 2024),
@@ -309,7 +322,7 @@ def main() -> None:
         "Rush-hour signal: morning IST 7-12"
     )
 
-    _sidebar_methodology()
+    _sidebar_methodology(lang)
 
     df = load_hotspots()
 
