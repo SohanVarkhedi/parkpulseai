@@ -11,10 +11,7 @@ st.set_page_config(
 st.title("PARKPULSE AI")
 st.caption("Decision Support System for Parking-Induced Traffic Congestion -- Bangalore")
 
-st.info(
-    "Phase 1 skeleton. Real hotspot detection, impact scoring, and officer allocation coming in Phase 3-5.",
-    icon="i",
-)
+st.info("Phase 1 skeleton. Real hotspot detection, impact scoring, and officer allocation coming in Phase 3-5.")
 
 BANGALORE = [12.9716, 77.5946]
 m = folium.Map(location=BANGALORE, zoom_start=12, tiles="CartoDB dark_matter")
