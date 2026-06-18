@@ -17,17 +17,17 @@ Status: todo / doing / done
 - [x] repo structure: src/, app.py, requirements.txt (Both)
 - [x] hello world Streamlit app running locally (B)
 - [x] push to GitHub (Both)
-- [ ] deploy to Streamlit Cloud and confirm live link works (B)
+- [x] deploy to Streamlit Cloud and confirm live link works (B)
 
 ---
 
 ## Phase 2: Data Layer (A)
 
-- [ ] load CSV, confirm row count, date range, column types
-- [ ] profile nulls, filter to validation_status = approved
-- [ ] parse violation_type from JSON array to usable form
-- [ ] extract hour from created_datetime for rush-hour weighting
-- [ ] output clean dataframe saved to data/clean_violations.parquet
+- [x] load CSV, confirm row count, date range, column types
+- [x] profile nulls, filter to validation_status = approved
+- [x] parse violation_type from JSON array to usable form
+- [x] extract hour from created_datetime for rush-hour weighting
+- [x] output clean dataframe saved to data/clean_violations.parquet
 
 ---
 

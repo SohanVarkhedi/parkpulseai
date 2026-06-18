@@ -60,3 +60,33 @@ Folium generates Leaflet HTML. streamlit-folium embeds it inside a Streamlit ifr
 
 **app.py at repo root, not inside src/**
 Streamlit Cloud expects the entry point at the root by default. src/ is reserved for importable modules (data loading, clustering, scoring). Keeps the deploy config simple.
+
+---
+
+**Timestamps are UTC, must convert to IST before hour extraction**
+The dataset marks all timestamps as UTC (+00:00). Bangalore is IST = UTC+5:30 (Asia/Kolkata). Extracting hours in UTC gives a completely wrong distribution -- peaks appear at 0-6 UTC (actually IST morning). All hour-based logic uses `dt.tz_convert("Asia/Kolkata")` before calling `.dt.hour`. Column is named `hour_ist` to make this explicit.
+
+---
+
+**Actual date range: Nov 9 2023 to Apr 8 2024 (filename is misleading)**
+The source CSV is named "jan to may" but the actual data spans Nov 2023 - Apr 2024. Do not cite "Jan-May" in the demo. Use the confirmed range.
+
+---
+
+**Row count after approved filter: 115,400 of 298,450 (61.3% removed)**
+NULLs account for 125,254 rows (no status assigned). Rejected: 49,754. Others (created1, processing, duplicate): ~8,042. Only approved records are used downstream.
+
+---
+
+**Morning enforcement is dominant; evening rush is absent from this dataset**
+After IST conversion, the hour distribution peaks at 8-11am IST (10k-12k violations/hour). Evening rush hours 17-20 IST contain only ~154 rows total across all hotspots. This is not a data error -- enforcement in Bangalore appears morning-heavy. Consequence for Phase 3: rush-hour weighting will be driven almost entirely by the morning signal. Do not claim evening congestion insight from this data.
+
+---
+
+**Rush-hour windows used: morning 7-11 IST, evening 17-20 IST**
+Both windows are flagged in `is_rush_hour` for completeness, but Phase 3 scoring should compute the actual fraction per hotspot from raw data -- the evening window will naturally contribute near-zero weight where data is sparse.
+
+---
+
+**violation_type kept as a list per row, not exploded**
+Each row is one enforcement event (one vehicle stop). A single event can have multiple violation subtypes stored as a JSON array string. Parsed with `json.loads()` into a Python list and stored in `violation_type_list`. Not exploded into multiple rows because that would inflate violation counts in Phase 3 density calculations. One row = one event.
