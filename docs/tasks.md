@@ -85,6 +85,21 @@ Status: todo / doing / done
 
 ---
 
+## Police Station Filter + Junction Name (post Phase 7 feature)
+
+- [x] build_hotspots(): compute mode police_station, mode junction_name, station_count per cluster
+- [x] handoff JSON extended with police_station, junction_name, station_count
+- [x] load_hotspots() in app.py: graceful defaults if JSON not yet regenerated (backward compat)
+- [x] _build_map(): junction_name and police_station in popup; "Spans multiple stations" note when station_count > 1
+- [x] junction_name in map tooltip
+- [x] Priority List: Junction and Police Station columns added; "Spans multiple stations" note in cell when station_count > 1
+- [x] Sidebar: police station filter selectbox (All stations + sorted station list)
+- [x] Filter applied to Map and Priority List; Simulator always runs on full hotspot set
+- [x] 3 new i18n keys: station_filter, all_stations, spans_multiple_stations (en + kn first draft)
+- [x] decisions.md handoff contract updated with new fields
+
+---
+
 ## Phase 7: Deploy + Polish
 
 - [x] confirmed live on Streamlit Cloud at latest commit

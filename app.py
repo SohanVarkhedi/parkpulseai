@@ -28,6 +28,12 @@ def load_hotspots() -> pd.DataFrame:
     df["violation_count"] = breakdown.apply(lambda x: int(x["violation_count"]))
     df["rush_frac"] = breakdown.apply(lambda x: round(float(x["rush_frac"]), 3))
     df["count_norm"] = breakdown.apply(lambda x: round(float(x["count_norm"]), 3))
+    if "police_station" not in df.columns:
+        df["police_station"] = "Unknown"
+    if "junction_name" not in df.columns:
+        df["junction_name"] = "Unnamed junction"
+    if "station_count" not in df.columns:
+        df["station_count"] = 1
     return df.sort_values("impact_score", ascending=False).reset_index(drop=True)
 
 
@@ -55,7 +61,7 @@ def _legend_html(lang: str) -> str:
     )
 
 
-def _build_map(df: pd.DataFrame) -> folium.Map:
+def _build_map(df: pd.DataFrame, lang: str) -> folium.Map:
     m = folium.Map(location=BANGALORE_CENTER, zoom_start=12, tiles="CartoDB dark_matter")
     for _, row in df.iterrows():
         score = float(row["impact_score"])
@@ -68,8 +74,17 @@ def _build_map(df: pd.DataFrame) -> folium.Map:
             if row["hotspot_id"] == CENTRAL_CLUSTER_ID
             else ""
         )
+        junction = row.get("junction_name") or "Unnamed junction"
+        station = row.get("police_station") or "Unknown"
+        sc = int(row.get("station_count", 1))
+        station_html = (
+            f"{station} <i style='color:#f0a;'>({t('spans_multiple_stations', lang)})</i>"
+            if sc > 1 else station
+        )
         popup_html = (
             f"<b>Hotspot #{int(row['hotspot_id'])}</b>{note}<br>"
+            f"Junction: {junction}<br>"
+            f"Police station: {station_html}<br>"
             f"Impact score: <b>{score:.3f}</b><br>"
             f"Violations: {int(row['violation_count']):,}<br>"
             f"Rush-hour share: {row['rush_frac']*100:.1f}%<br>"
@@ -77,7 +92,7 @@ def _build_map(df: pd.DataFrame) -> folium.Map:
             f"Officers recommended: <b>{int(row['recommended_officers'])}</b>"
         )
         tooltip = (
-            f"#{int(row['hotspot_id'])} | score {score:.2f} | "
+            f"#{int(row['hotspot_id'])} {junction} | score {score:.2f} | "
             f"{int(row['violation_count']):,} violations"
         )
         folium.CircleMarker(
@@ -107,7 +122,7 @@ def page_map(df: pd.DataFrame, lang: str) -> None:
     col_c.metric(t("total_violations_mapped", lang), f"{df['violation_count'].sum():,}")
 
     st.markdown("&nbsp;", unsafe_allow_html=True)
-    m = _build_map(df)
+    m = _build_map(df, lang)
     st_folium(m, use_container_width=True, height=560, returned_objects=[])
     st.markdown(_legend_html(lang), unsafe_allow_html=True)
 
@@ -126,6 +141,9 @@ def page_priority_list(df: pd.DataFrame, lang: str) -> None:
     display = df[
         [
             "hotspot_id",
+            "junction_name",
+            "police_station",
+            "station_count",
             "impact_score",
             "violation_count",
             "count_norm",
@@ -134,11 +152,19 @@ def page_priority_list(df: pd.DataFrame, lang: str) -> None:
             "recommended_officers",
         ]
     ].copy()
+    display["police_station"] = display.apply(
+        lambda r: f"{r['police_station']} ({t('spans_multiple_stations', lang)})"
+        if int(r["station_count"]) > 1 else r["police_station"],
+        axis=1,
+    )
+    display = display.drop(columns=["station_count"])
     display.index = range(1, len(display) + 1)
     display.index.name = "rank"
     display = display.rename(
         columns={
             "hotspot_id": "Hotspot ID",
+            "junction_name": "Junction",
+            "police_station": "Police Station",
             "impact_score": impact_col,
             "violation_count": viol_col,
             "count_norm": "Count Norm",       # technical abbreviation -- stays English
@@ -293,6 +319,8 @@ def main() -> None:
     if "lang" not in st.session_state:
         st.session_state.lang = "en"
 
+    df = load_hotspots()
+
     st.sidebar.title(t("app_title", st.session_state.lang))
     st.sidebar.caption(t("app_subtitle", st.session_state.lang))
     st.sidebar.divider()
@@ -315,6 +343,19 @@ def main() -> None:
     )
 
     st.sidebar.divider()
+
+    stations = sorted(df["police_station"].unique().tolist())
+    all_label = t("all_stations", lang)
+    selected_station = st.sidebar.selectbox(
+        t("station_filter", lang),
+        [all_label] + stations,
+    )
+    if selected_station == all_label:
+        filtered_df = df
+    else:
+        filtered_df = df[df["police_station"] == selected_station].reset_index(drop=True)
+
+    st.sidebar.divider()
     st.sidebar.caption(
         "Data: 115,400 approved violations\n"
         "Period: Nov 2023 - Apr 2024\n"
@@ -324,12 +365,10 @@ def main() -> None:
 
     _sidebar_methodology(lang)
 
-    df = load_hotspots()
-
     if page_key == "nav_map":
-        page_map(df, lang)
+        page_map(filtered_df, lang)
     elif page_key == "nav_priority_list":
-        page_priority_list(df, lang)
+        page_priority_list(filtered_df, lang)
     else:
         page_simulator(df, lang)
 

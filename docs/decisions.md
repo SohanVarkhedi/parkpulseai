@@ -27,9 +27,13 @@ violation_type is stored as a JSON array per row (e.g. ["WRONG PARKING","NO PARK
 **Handoff contract (do not change without telling both people)**
 Person A outputs exactly:
 ```
-hotspot_id, lat, lon, impact_score, score_breakdown, violations_per_hour, recommended_officers
+hotspot_id, lat, lon, impact_score, score_breakdown, violations_per_hour, recommended_officers,
+police_station, junction_name, station_count
 ```
 score_breakdown is a dict or JSON string showing how much each factor contributed to impact_score.
+police_station: most frequent (mode) police station within the cluster's rows; single string.
+junction_name: most frequent non-null junction_name within the cluster; falls back to "Unnamed junction" if all rows are null.
+station_count: integer count of distinct police_station values in the cluster. Used by the UI to flag clusters that span multiple jurisdictions (station_count > 1). The filter uses only police_station (the top station), not the full list.
 
 ---
 

@@ -38,6 +38,13 @@ def build_hotspots(
     for cid, grp in df[df["cluster"] != -1].groupby("cluster"):
         total = len(grp)
         rush = int(grp["is_rush_hour"].sum())
+        station_series = grp["police_station"].dropna()
+        police_station = station_series.mode().iloc[0] if len(station_series) > 0 else "Unknown"
+        station_count = int(grp["police_station"].nunique())
+
+        junc_series = grp["junction_name"].dropna()
+        junction_name = junc_series.mode().iloc[0] if len(junc_series) > 0 else "Unnamed junction"
+
         rows.append(
             {
                 "hotspot_id": int(cid),
@@ -47,6 +54,9 @@ def build_hotspots(
                 "rush_violations": rush,
                 "rush_frac": round(rush / total, 4),
                 "violations_per_hour": round(total / enforcement_hours, 4),
+                "police_station": police_station,
+                "junction_name": junction_name,
+                "station_count": station_count,
             }
         )
 
@@ -154,7 +164,8 @@ def run(eps: float, min_samples: int) -> pd.DataFrame:
 
     handoff = hs[
         ["hotspot_id", "lat", "lon", "impact_score",
-         "score_breakdown", "violations_per_hour", "recommended_officers"]
+         "score_breakdown", "violations_per_hour", "recommended_officers",
+         "police_station", "junction_name", "station_count"]
     ].copy()
     handoff["score_breakdown"] = handoff["score_breakdown"].apply(json.dumps)
     handoff.to_json(OUT_JSON, orient="records", indent=2)

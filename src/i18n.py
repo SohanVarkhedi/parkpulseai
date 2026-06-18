@@ -28,6 +28,9 @@ translations = {
     "col_impact_score": {"en": "Impact Score", "kn": "ಪ್ರಭಾವ ಅಂಕ"},
     "col_violations": {"en": "Violations", "kn": "ಉಲ್ಲಂಘನೆಗಳು"},
     "col_officers_rec": {"en": "Officers Rec.", "kn": "ಶಿಫಾರಸು ಅಧಿಕಾರಿಗಳು"},
+    "station_filter": {"en": "Filter by police station", "kn": "ಪೊಲೀಸ್ ಠಾಣೆಯಿಂದ ಫಿಲ್ಟರ್ ಮಾಡಿ"},
+    "all_stations": {"en": "All stations", "kn": "ಎಲ್ಲ ಠಾಣೆಗಳು"},
+    "spans_multiple_stations": {"en": "Spans multiple stations", "kn": "ಬಹು ಠಾಣೆಗಳನ್ನು ಒಳಗೊಂಡಿದೆ"},
 }
 
 
